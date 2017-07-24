@@ -78,8 +78,45 @@ char* laji_conf_get_varname() {
     return laji_conf_cur_varname;
 }
 
+int laji_conf_get_variable(void* variable) {
+    enum laji_conf_datetype type;
+    int slen;
+    char* laji_conf_cur_variable_raw_copy;
+
+    type = laji_conf_get_type();
+
+    switch (type) {
+        case LAJI_STR:
+            laji_conf_cur_variable_raw_copy = (char*)variable;
+            slen = strlen(laji_conf_cur_variable_raw);
+            strncpy(laji_conf_cur_variable_raw_copy, laji_conf_cur_variable_raw + 1, slen - 2);
+            laji_conf_cur_variable_raw_copy[slen - 2] = '\0';
+            return 0;
+            break; // :P
+        case LAJI_INT:
+            sscanf(laji_conf_cur_variable_raw, "%d", variable);
+            return 0;
+            break;
+        case LAJI_FLT:
+            sscanf(laji_conf_cur_variable_raw, "%lf", variable);
+            return 0;
+        default:
+            variable = NULL;
+            return -1;
+    }
+}
+
 enum laji_conf_datetype laji_conf_get_type() {
-    return LAJI_LAJI; // todo: impl
+    if (laji_conf_cur_variable_raw[0] == '"') {
+        return LAJI_STR;
+    } else if (laji_conf_cur_variable_raw[0] == '[') {
+        return LAJI_ARR;
+    } else if (strchr(laji_conf_cur_variable_raw, '.') == NULL) {
+        return LAJI_INT;
+    } else {
+        return LAJI_FLT;
+    }
+    return LAJI_LAJI; // tan90° :P
 }
 
 char* laji_conf_get_raw_variable() {
