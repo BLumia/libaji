@@ -11,11 +11,14 @@
 
 int laji_log_findnewfile();
 
+char laji_l2c[] = {'?', 'V', 'D', 'I', 'W', 'E', 'A'};
+
 pthread_mutex_t logger_mutex = PTHREAD_MUTEX_INITIALIZER;
 char laji_log_filepath[616]; // right way to save file path?
 int laji_log_inited = 0;
 int laji_log_filefd = -1;
 int laji_log_enabled = 1;
+log_level_t laji_log_level = 0;
 struct tm* laji_log_today;
 
 int laji_log_init(const char* path) {
@@ -30,6 +33,21 @@ int laji_log_init(const char* path) {
         }
     }
     return 0;
+}
+
+int laji_log_level_set(log_level_t loglevel) {
+    laji_log_level = loglevel;
+    return 0;
+}
+
+int laji_log_level_set_c(char charval) {
+    for (int i = 1; i <= 6; i++) {
+        if (charval == laji_l2c[i]) {
+            laji_log_level = i;
+            return 0;
+        }
+    }
+    return -1;
 }
 
 int laji_log_findnewfile() {
@@ -70,6 +88,10 @@ int laji_log(log_level_t log_level, const char *format, ...) {
 
 int laji_log_s(log_level_t log_level, const char* buffer) {
     if (laji_log_enabled && laji_log_inited) {
+
+        // check log level
+        if (log_level < laji_log_level) return 0;
+
         pthread_mutex_lock(&logger_mutex);
 
         // check filesize
@@ -88,7 +110,7 @@ int laji_log_s(log_level_t log_level, const char* buffer) {
         char output_buffer[616], time_buffer[61];
         int output_bufferlen;
         strftime(time_buffer, 61, "%Y-%m-%d %H:%M:%S", cur_time); 
-        sprintf(output_buffer, "%s %c %s\n", time_buffer, log_level, buffer);
+        sprintf(output_buffer, "%s %c %s\n", time_buffer, laji_l2c[log_level], buffer);
         output_bufferlen = strlen(output_buffer);
         //06-29 18:38:32.891   824   960 I ThermalEngine: Monitor : quiet_therm = 44, msm_therm = 47, ufs_therm = 44, battery_therm = 376,current_now = 26000
         write(laji_log_filefd, output_buffer, output_bufferlen);

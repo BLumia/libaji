@@ -5,8 +5,11 @@
 #include "logger.h"
 
 void *thread_function(void *arg) {
-    for (int i=0; i<20; i++) {
-        laji_log('v', "Thread %d says hi!", *(int*)arg);
+    for (int i=0; i<10; i++) {
+        laji_log(LOG_VERBOSE, "Thread %d says hi!", *(int*)arg);
+    }
+    for (int i=0; i<10; i++) {
+        laji_log(LOG_INFO, "Thread %d says hi!", *(int*)arg);
     }
     free(arg);
     return NULL;
@@ -17,6 +20,7 @@ int main() {
     pthread_t mythreads[61];
 
     laji_log_init("./");
+    laji_log_level_set(LOG_INFO);
 
     for(int i = 0; i < 20; i++) {
         int* new_i = malloc(sizeof(int));
@@ -26,7 +30,7 @@ int main() {
 
     sleep(2);
     
-    laji_log_s(LOG_VERBOSE, "done");
+    laji_log_s(LOG_INFO, "done");
     laji_log_close();
 
 }

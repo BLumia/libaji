@@ -6,6 +6,7 @@ enum laji_conf_datetype {
     LAJI_STR,
     LAJI_ARR,
     LAJI_FLT,
+    LAJI_CHR,
     LAJI_LAJI
 };
 

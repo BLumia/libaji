@@ -2,7 +2,7 @@
 #include "configman.h"
 
 int main() {
-    char strval[616];
+    char charval, strval[616];
     int intval;
     double fltval;
 
@@ -15,9 +15,14 @@ int main() {
                         laji_conf_get_section(), laji_conf_get_varname(), intval);
                 break;
             case LAJI_FLT:
-                laji_conf_get_variable(&intval);
+                laji_conf_get_variable(&fltval);
                 printf("FLT var reached under [%s]! %s=%lf\n",
                         laji_conf_get_section(), laji_conf_get_varname(), fltval);
+                break;
+            case LAJI_CHR:
+                laji_conf_get_variable(&charval);
+                printf("CHR var reached under [%s]! %s=%c\n",
+                        laji_conf_get_section(), laji_conf_get_varname(), charval);
                 break;
             case LAJI_STR:
                 laji_conf_get_variable(strval);

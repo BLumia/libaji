@@ -30,6 +30,7 @@ laji_conf_nextline:
         strtok(buffer, "#"); 
 
         buffer_ptr = laji_trim(buffer);
+        if (buffer_ptr[0] == '\0') goto laji_conf_nextline;
         int slen = strlen(buffer_ptr);
 
         if (laji_arr_flag == 1) {
@@ -93,6 +94,10 @@ int laji_conf_get_variable(void* variable) {
             laji_conf_cur_variable_raw_copy[slen - 2] = '\0';
             return 0;
             break; // :P
+        case LAJI_CHR:
+            *(char*)variable = laji_conf_cur_variable_raw[1]; // 'V'
+            return 0;
+            break;
         case LAJI_INT:
             sscanf(laji_conf_cur_variable_raw, "%d", variable);
             return 0;
@@ -109,6 +114,8 @@ int laji_conf_get_variable(void* variable) {
 enum laji_conf_datetype laji_conf_get_type() {
     if (laji_conf_cur_variable_raw[0] == '"') {
         return LAJI_STR;
+    } else if (laji_conf_cur_variable_raw[0] == '\'') {
+        return LAJI_CHR;
     } else if (laji_conf_cur_variable_raw[0] == '[') {
         return LAJI_ARR;
     } else if (strchr(laji_conf_cur_variable_raw, '.') == NULL) {
@@ -138,6 +145,7 @@ char* laji_trim(char *buffer) {
     while(isspace(*(pend - 1))) { 
         pend--;
         *pend = '\0';
+        if (pend == pstart) return pstart; // term a str with full space
     }
 
     while(isspace(*pstart)) { 

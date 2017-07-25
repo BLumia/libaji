@@ -5,15 +5,17 @@
 #include <pthread.h>
 
 typedef enum LOG_LEVEL {
-    LOG_VERBOSE = 'V',
-    LOG_DEBUG = 'D',
-    LOG_INFO = 'I',
-    LOG_WARN = 'W',
-    LOG_ERROR = 'E',
-    LOG_ASSERT = 'A'
+    LOG_VERBOSE = 1,
+    LOG_DEBUG = 2,
+    LOG_INFO = 3,
+    LOG_WARN = 4,
+    LOG_ERROR = 5,
+    LOG_ASSERT = 6
 } log_level_t;
 
 int laji_log_init(const char* path);
+int laji_log_level_set(log_level_t loglevel);
+int laji_log_level_set_c(char charval);
 int laji_log_s(log_level_t log_level, const char* buffer);
 int laji_log(log_level_t log_level, const char *format, ...);
 int laji_log_close();
