@@ -1,14 +1,14 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <pthread.h>
 #include <unistd.h>
 #include "logger.h"
 
 void *thread_function(void *arg) {
-    char buffer[61];
-    sprintf(buffer, "Thread %d says hi!", *(int*)arg);
     for (int i=0; i<20; i++) {
-        laji_log(buffer);
+        laji_log('v', "Thread %d says hi!", *(int*)arg);
     }
+    free(arg);
     return NULL;
 }
 
@@ -19,12 +19,14 @@ int main() {
     laji_log_init("./");
 
     for(int i = 0; i < 20; i++) {
-        pthread_create(&mythreads[i], NULL, thread_function, (void*)&i);
+        int* new_i = malloc(sizeof(int));
+        *new_i = i;
+        pthread_create(&mythreads[i], NULL, thread_function, (void*)new_i);
     }
 
     sleep(2);
     
-    laji_log("done");
+    laji_log_s(LOG_VERBOSE, "done");
     laji_log_close();
 
 }

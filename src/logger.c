@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdarg.h>
 #include <time.h>
 #include <pthread.h>
 #include <fcntl.h>
@@ -58,7 +59,16 @@ int laji_log_findnewfile() {
     return 0;
 }
 
-int laji_log(const char* buffer) {
+int laji_log(log_level_t log_level, const char *format, ...) {
+
+    char buffer[256];
+    va_list args;
+    va_start(args, format);
+    vsnprintf(buffer, 256, format, args);
+    laji_log_s(log_level, buffer);
+}
+
+int laji_log_s(log_level_t log_level, const char* buffer) {
     if (laji_log_enabled && laji_log_inited) {
         pthread_mutex_lock(&logger_mutex);
 
@@ -78,7 +88,7 @@ int laji_log(const char* buffer) {
         char output_buffer[616], time_buffer[61];
         int output_bufferlen;
         strftime(time_buffer, 61, "%Y-%m-%d %H:%M:%S", cur_time); 
-        sprintf(output_buffer, "%s %c %s\n", time_buffer, 'V', buffer);
+        sprintf(output_buffer, "%s %c %s\n", time_buffer, log_level, buffer);
         output_bufferlen = strlen(output_buffer);
         //06-29 18:38:32.891   824   960 I ThermalEngine: Monitor : quiet_therm = 44, msm_therm = 47, ufs_therm = 44, battery_therm = 376,current_now = 26000
         write(laji_log_filefd, output_buffer, output_bufferlen);

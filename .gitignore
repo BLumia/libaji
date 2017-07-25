@@ -5,3 +5,6 @@
 *.o
 *.elf
 *.a
+
+# Log
+*.log
