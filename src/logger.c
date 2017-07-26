@@ -14,7 +14,7 @@
 int laji_log_findnewfile();
 void * laji_log_mqhandler(void *arg);
 
-char laji_l2c[] = {'?', 'V', 'D', 'I', 'W', 'E', 'A'};
+char laji_l2c[] = {'?', 'V', 'D', 'I', 'W', 'E', 'A', 'M'};
 
 pthread_mutex_t logger_mutex = PTHREAD_MUTEX_INITIALIZER;
 char laji_log_filepath[616]; // right way to save file path?
@@ -47,7 +47,7 @@ int laji_log_level_set(log_level_t loglevel) {
 }
 
 int laji_log_level_set_c(char charval) {
-    for (int i = 1; i <= 6; i++) {
+    for (int i = 1; i <= 7; i++) {
         if (charval == laji_l2c[i]) {
             laji_log_level = i;
             return 0;
@@ -95,6 +95,9 @@ void * laji_log_mqhandler(void *arg) {
 }
 
 int laji_log_mq_toggle(int enable_mq) {
+
+    if (laji_log_enabled == 0) return 0;
+
     enable_mq = enable_mq == 0 ? 0 : 1;
     if (laji_log_mq_enabled == enable_mq) return 0;
     laji_log_mq_enabled = enable_mq;
@@ -140,6 +143,9 @@ int laji_log_findnewfile() {
 }
 
 int laji_log(log_level_t log_level, const char *format, ...) {
+
+    if (laji_log_enabled == 0) return 0;
+    if (log_level < laji_log_level) return 0;
 
     char buffer[256];
     va_list args;

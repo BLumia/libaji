@@ -11,7 +11,8 @@ typedef enum LOG_LEVEL {
     LOG_INFO = 3,
     LOG_WARN = 4,
     LOG_ERROR = 5,
-    LOG_ASSERT = 6
+    LOG_ASSERT = 6,
+    LOG_MUTED = 7
 } log_level_t;
 
 typedef struct laji_log_mq_struct {
