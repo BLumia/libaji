@@ -29,6 +29,17 @@ int main() {
     }
 
     sleep(2);
+
+    // enable POSIX MQ and standalone thread for logging
+    laji_log_mq_toggle(1);
+
+    for(int i = 21; i < 40; i++) {
+        int* new_i = malloc(sizeof(int));
+        *new_i = i;
+        pthread_create(&mythreads[i], NULL, thread_function, (void*)new_i);
+    }
+
+    sleep(2);
     
     laji_log_s(LOG_INFO, "done");
     laji_log_close();
