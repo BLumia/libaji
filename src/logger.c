@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
+#include <limits.h>
 #include <time.h>
 #include <pthread.h>
 #include <fcntl.h>
@@ -17,7 +18,7 @@ void * laji_log_mqhandler(void *arg);
 char laji_l2c[] = {'?', 'V', 'D', 'I', 'W', 'E', 'A', 'M'};
 
 pthread_mutex_t logger_mutex = PTHREAD_MUTEX_INITIALIZER;
-char laji_log_filepath[616]; // right way to save file path?
+char laji_log_filepath[PATH_MAX];
 int laji_log_inited = 0;
 int laji_log_filefd = -1;
 int laji_log_enabled = 1;
@@ -30,7 +31,7 @@ mqd_t laji_log_mqdes;
 int laji_log_init(const char* path) {
     if (laji_log_enabled) {
         pthread_mutex_init(&logger_mutex, NULL);
-        strcpy(laji_log_filepath, path);
+        realpath(path, laji_log_filepath);
         if (laji_log_findnewfile() != -1) {
             laji_log_inited = 1;
             return 0;
@@ -128,16 +129,17 @@ int laji_log_mq_toggle(int enable_mq) {
 int laji_log_findnewfile() {
     char buffer[616], num_buffer[6], time_buffer[61];
     time_t t;
-
-    if (laji_log_filefd != -1) close(laji_log_filefd);
     
     time(&t);
     laji_log_today = localtime(&t);
     strftime(time_buffer, 61, "%Y-%m-%d", laji_log_today);
 
     for(int number = 0; number <= 616; number++) {
+        // close if fd is opened
+        if (laji_log_filefd != -1) close(laji_log_filefd);
+
         sprintf(num_buffer, "_%d", number);
-        sprintf(buffer, "%slog_%s%s.log",
+        sprintf(buffer, "%s/log_%s%s.log",
                 laji_log_filepath, time_buffer, number == 0 ? "" : num_buffer);
         laji_log_filefd = open(buffer, O_WRONLY | O_CREAT | O_APPEND, 00644);
         if (laji_log_filefd == -1) {
