@@ -21,7 +21,7 @@ char laji_log_filepath[616]; // right way to save file path?
 int laji_log_inited = 0;
 int laji_log_filefd = -1;
 int laji_log_enabled = 1;
-int laji_log_mq_enabled = 0;
+volatile int laji_log_mq_enabled = 0;
 log_level_t laji_log_level = 0;
 struct tm* laji_log_today;
 pthread_t laji_log_mqhandler_p;
@@ -58,16 +58,21 @@ int laji_log_level_set_c(char charval) {
 
 void * laji_log_mqhandler(void *arg) {
 
-    // setting mq
-    laji_log_mqdes = mq_open("/lajihttpd_logger_mq", O_RDWR | O_CREAT, 0666, NULL);  
     struct mq_attr attr;
     ssize_t recvlen;
     laji_logmq_msg_t* msg;
     void *buf;
     int should_stop = 0;
 
+    // setting mq
+    laji_log_mqdes = mq_open("/lajihttpd_logger_mq", O_RDWR | O_CREAT | O_EXCL, 0666, NULL);
     if (laji_log_mqdes < 0) {
-        perror("setup_mq()");
+        if (errno == EEXIST) {
+            mq_unlink("/lajihttpd_logger_mq");
+            laji_log_mqdes = mq_open("/lajihttpd_logger_mq", O_RDWR | O_CREAT, 0666, NULL);
+        } else {
+            perror("laji_log_mqhandler()");
+        }
     }
 
     if (mq_getattr(laji_log_mqdes, &attr) == -1) perror("mq_getattr");
@@ -78,6 +83,7 @@ void * laji_log_mqhandler(void *arg) {
         while ((recvlen = mq_receive(laji_log_mqdes, buf, attr.mq_msgsize, NULL)) >= 0) {
             msg = buf;
             if (msg->stop_signal == 1) {
+                laji_log_s(msg->log_level, "Stopping Logger Message Queue...");
                 should_stop = 1;
                 break;
             }
@@ -90,6 +96,7 @@ void * laji_log_mqhandler(void *arg) {
     free(buf);
     mq_close(laji_log_mqdes);
     mq_unlink("/lajihttpd_logger_mq");
+    laji_log_mq_enabled = 0;
 
     return NULL;
 }
@@ -100,16 +107,19 @@ int laji_log_mq_toggle(int enable_mq) {
 
     enable_mq = enable_mq == 0 ? 0 : 1;
     if (laji_log_mq_enabled == enable_mq) return 0;
-    laji_log_mq_enabled = enable_mq;
 
     if (enable_mq) {
         pthread_create(&laji_log_mqhandler_p, NULL, laji_log_mqhandler, NULL);
+        laji_log_mq_enabled = 1;
     } else {
         laji_logmq_msg_t* buffer = malloc(sizeof(laji_logmq_msg_t));
+        buffer->log_level = LOG_INFO;
         buffer->stop_signal = 1;
         if (mq_send(laji_log_mqdes, (const char*)buffer, sizeof(laji_logmq_msg_t), 2) < 0) {
             perror("mq_send()");
         }
+        // when laji_log_mqhandler() received a shutdown msg (see ↑ here),
+        // laji_log_mq_enabled will be set to zero inside laji_log_mqhandler()
     }
 
     return 0;
@@ -213,6 +223,11 @@ int laji_log_close() {
 
     if (laji_log_mq_enabled) {
         laji_log_mq_toggle(0);
+    }
+
+    while (laji_log_mq_enabled) {
+        // do nothing, block to wait `laji_log_mq_enabled` set to zero.
+        sleep(1); // neccessary?
     }
     
     if (laji_log_filefd != -1 && laji_log_enabled && laji_log_inited) {
