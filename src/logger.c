@@ -35,7 +35,7 @@ int laji_log_init(const char* path) {
             laji_log_inited = 1;
             return 0;
         } else {
-            fputs("laji_log_init() can not create file for read.\n", stdout);
+            fputs("laji_log_init() can not create file for logger.\n", stdout);
         }
     }
     return 0;
@@ -116,8 +116,7 @@ int laji_log_mq_toggle(int enable_mq) {
 }
 
 int laji_log_findnewfile() {
-    char buffer[616], num_buffer[61], time_buffer[61];
-    int number = 0;
+    char buffer[616], num_buffer[6], time_buffer[61];
     time_t t;
 
     if (laji_log_filefd != -1) close(laji_log_filefd);
@@ -126,13 +125,13 @@ int laji_log_findnewfile() {
     laji_log_today = localtime(&t);
     strftime(time_buffer, 61, "%Y-%m-%d", laji_log_today);
 
-    while(number < 616) {
+    for(int number = 0; number <= 616; number++) {
         sprintf(num_buffer, "_%d", number);
         sprintf(buffer, "%slog_%s%s.log",
                 laji_log_filepath, time_buffer, number == 0 ? "" : num_buffer);
         laji_log_filefd = open(buffer, O_WRONLY | O_CREAT | O_APPEND, 00644);
         if (laji_log_filefd == -1) {
-            perror("laji_log_init()");
+            perror("laji_log_findnewfile()");
             return -1;
         }
         struct stat file_stat;

@@ -21,7 +21,7 @@ int main() {
 
     laji_log_init("./");
     laji_log_level_set(LOG_INFO);
-
+sleep(2);
     for(int i = 0; i < 20; i++) {
         int* new_i = malloc(sizeof(int));
         *new_i = i;
