@@ -83,8 +83,8 @@ void * laji_log_mqhandler(void *arg) {
             }
             laji_log_s(msg->log_level, msg->buffer);
         }
-        if(errno != EAGAIN) perror("mq_receive()");
         if (should_stop == 1) break;
+        if (errno != EAGAIN) perror("mq_receive()");
     }
 
     free(buf);
