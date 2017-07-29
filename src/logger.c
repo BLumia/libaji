@@ -158,20 +158,17 @@ int laji_log(log_level_t log_level, const char *format, ...) {
     if (laji_log_enabled == 0) return 0;
     if (log_level < laji_log_level) return 0;
 
-    char buffer[256];
+    laji_logmq_msg_t msg;
     va_list args;
     va_start(args, format);
-    vsnprintf(buffer, 256, format, args);
+    vsnprintf(msg.buffer, 256, format, args);
     if (laji_log_mq_enabled) {
-        laji_logmq_msg_t* msg = malloc(sizeof(laji_logmq_msg_t));
-        strcpy(msg->buffer, buffer);
-        msg->log_level = log_level;
-        if (mq_send(laji_log_mqdes, (const char*)msg, sizeof(laji_logmq_msg_t), 1) < 0) {
+        msg.log_level = log_level;
+        if (mq_send(laji_log_mqdes, (const char*)&msg, sizeof(laji_logmq_msg_t), 1) < 0) {
             perror("mq_send()");
         }
-        free(msg);
     } else {
-        laji_log_s(log_level, buffer);
+        laji_log_s(log_level, msg.buffer);
     }
     return 0;
 }
