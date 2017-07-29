@@ -1,7 +1,7 @@
 # test of libaji
 
 CC = gcc
-CFLAGS = -L../lib/ -I../include/ -laji -lrt -pthread -g 
+CFLAGS = -L../lib/ -I../include/ -laji -lrt -pthread -g -std=c11
 
 all: threadpool.elf logger.elf configman.elf
 	@echo "Done!"
